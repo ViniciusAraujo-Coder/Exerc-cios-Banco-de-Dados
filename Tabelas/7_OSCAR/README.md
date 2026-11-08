@@ -23,63 +23,130 @@ Nestes exercícios, você vai explorar o banco de dados SQL do Oscar e responder
 
 **1.1** Quantos registros existem na tabela de indicados ao Oscar?
 
-Exemplo de resposta: 
-
-R: 1430 registros
+R: 10889 registros
 
 ```sql
-SELECT COUNT(*) FROM oscar_indicados;
+SELECT count(*) from indicados_ao_oscar;
 ```
 
 **1.2.1** Quais são as diferentes categorias de premiação que existem no banco de dados? Liste todas as categorias únicas.
 
-Exemplo de resposta:
-
 R:
-```ACTOR
-ACTOR IN A LEADING ROLE
-ACTOR IN A SUPPORTING ROLE
+```
+ACTOR
+ACTRESS
+ART DIRECTION
+CINEMATOGRAPHY
 ...
 ```
 
 ```sql
-SELECT DISTINCT categoria FROM oscar_indicados;
+SELECT DISTINCT categoria FROM indicados_ao_oscar;
 ```
 
 **1.2.2** **Quantas** categorias únicas existem?
 
-R: 92 registros
+R: 115 registros
 
 Exemplo de resposta:
 
 ```sql
-SELECT COUNT(DISTINCT categoria) FROM oscar_indicados;
+SELECT COUNT(DISTINCT categoria) FROM indicados_ao_oscar;
 ```
 
 **1.3** Qual foi o primeiro ano de cerimônia do Oscar registrado na base?
 
+R: 1928
+
+```sql
+SELECT MIN(ano_cerimonia) FROM indicados_ao_oscar;
+```
+
 **1.4** Qual foi o último ano de cerimônia registrado na base?
+
+R: 2024
+
+```sql
+SELECT MAX(ano_cerimonia) FROM indicados_ao_oscar;
+```
 
 **1.5** Quantas cerimônias do Oscar estão registradas no total?
 
+R: 96 cerimônias
+
+```sql
+SELECT COUNT(distinct ano_cerimonia) FROM indicados_ao_oscar;
+```
+
 **1.6** Atualize os registros da tabela com os dados do Oscar 2025 e 2026 (pesquise os vencedores e adicione-os).
+```sql
+SELECT ano_cerimonia, edicao_cerimonia, COUNT(*) AS total_vencedores
+FROM indicados_ao_oscar
+WHERE ano_cerimonia IN (2025, 2026)
+GROUP BY ano_cerimonia, edicao_cerimonia;
+```
 
 ---
 
 ## Nível 2: Explorando Categorias
 
 **2.1** Quantas indicações existem para cada categoria? Agrupe por categoria e ordene da mais frequente para a menos frequente.
+```sql
+SELECT categoria, COUNT(*) FROM indicados_ao_oscar GROUP BY categoria ORDER BY count(*)desc;
+```
 
 **2.2** Qual categoria teve mais indicações ao longo da história do Oscar?
 
+R: DIRECTING
+
+```sql
+SELECT categoria, COUNT(*) FROM indicados_ao_oscar GROUP BY categoria ORDER BY COUNT(*) DESC LIMIT 1;
+```
+
 **2.3** Qual categoria teve menos indicações ao longo da história?
+
+R: SPECIAL ACHIEVEMENT AWARD (Sound Effects)
+
+```sql
+SELECT categoria, COUNT(*) FROM indicados_ao_oscar GROUP BY categoria ORDER BY COUNT(*) ASC LIMIT 1;
+```
 
 **2.4** A partir de que ano a categoria "ACTRESS" deixou de existir? (Dica: procure a última cerimônia com essa categoria)
 
+R: 1976
+
+```sql
+SELECT MAX(ano_cerimonia)
+FROM indicados_ao_oscar
+WHERE categoria = 'ACTRESS';
+```
+
 **2.5** Quais categorias existiam na primeira cerimônia (1928) e não existem mais hoje?
+
+R: 
+
+```sql
+SELECT distinct categoria
+FROM indicados_ao_oscar
+WHERE ano_cerimonia = 1928
+  AND categoria NOT IN (
+      SELECT categoria
+      FROM indicados_ao_oscar
+      WHERE ano_cerimonia = (SELECT MAX(ano_cerimonia) FROM indicados_ao_oscar)
+  );
+```
 
 **2.6** Liste todas as categorias que contêm a palavra "DIRECTING" no nome.
 
+R: DIRECTING (Comedy Picture)
+DIRECTING (Dramatic Picture)
+DIRECTING
+
+```sql
+SELECT distinct categoria
+FROM indicados_ao_oscar
+WHERE categoria LIKE '%DIRECTING%'
+```
 ---
 
 ## Nível 3: Atores e Atrizes Famosos
@@ -88,11 +155,39 @@ SELECT COUNT(DISTINCT categoria) FROM oscar_indicados;
 
 **3.1** Quantas vezes Natalie Portman foi indicada ao Oscar?
 
+R: 3
+
+```sql
+SELECT count(*) as "Vezes Indicada ao Oscar (Natalie Portman)" FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Natalie Portman%';
+```
+
 **3.2** Quantos Oscars Natalie Portman ganhou?
+
+R: 1
+
+```sql
+SELECT count(*) as "Vezes ganhadora do Oscar (Natalie Portman)" FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Natalie Portman%';
+```
 
 **3.3** Em quais anos e por quais filmes Natalie Portman foi indicada?
 
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme
+FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Natalie Portman%'
+ORDER BY ano_cerimonia;
+```
+
 **3.4** Liste todas as indicações de Natalie Portman mostrando: ano, categoria, filme e se venceu.
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor 
+FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Natalie Portman%'
+ORDER BY ano_cerimonia;
+```
 
 ### Viola Davis
 
@@ -118,19 +213,58 @@ vencedor = true;
 
 **3.7** Por quais filmes Viola Davis foi indicada?
 
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme
+FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Viola Davis%'
+ORDER BY ano_cerimonia;
+```
+
 ### Amy Adams
 
 **3.8** Amy Adams já ganhou algum Oscar?
 
+R: Não
+
+```sql
+SELECT count(*) as "Vezes ganhadora do Oscar (Amy Adams)" FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Amy Adams%' AND vencedor = true;
+```
+
 **3.9** Quantas vezes Amy Adams foi indicada sem ganhar?
+````sql
+SELECT count(*) as "Vezes indicada ao Oscar (Amy Adams)" FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Amy Adams%';
+````
 
 ### Denzel Washington
 
 **3.10** Denzel Washington já ganhou algum Oscar?
 
+R: 2 vezes ele ganhou
+
+```sql
+SELECT count(*) as "Vezes ganhador do Oscar (Denzel Washington)" FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Denzel Washington%' AND vencedor = true;
+```
+
 **3.11** Quantas vezes Denzel Washington foi indicado ao Oscar?
 
+R: 10 vezes
+
+```sql
+SELECT count(*) as "Vezes indicado ao Oscar (Denzel Washington)" FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Denzel Washington%';
+```
+
 **3.12** Liste todos os Oscars que Denzel Washington ganhou (ano, categoria, filme).
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme
+FROM indicados_ao_oscar
+WHERE nome_indicado LIKE '%Denzel Washington%' AND vencedor = true
+ORDER BY ano_cerimonia;
+```
 
 ---
 
