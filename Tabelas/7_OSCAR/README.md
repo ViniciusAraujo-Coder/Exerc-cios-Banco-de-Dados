@@ -326,16 +326,67 @@ WHERE vencedor = true;
 ## Nível 5: Análise de Indicações
 
 **5.1** Quais atores/atrizes foram indicados mais de uma vez? Liste o nome e o número de indicações.
+```sql
+SELECT nome_indicado, COUNT(*) AS total_indicacoes
+FROM indicados_ao_oscar
+WHERE categoria LIKE 'ACT%'
+GROUP BY nome_indicado
+HAVING COUNT(*) > 1
+ORDER BY total_indicacoes DESC;
+```
 
 **5.2** Qual ator ou atriz tem o maior número de indicações na história do Oscar?
+```sql
+SELECT nome_indicado, COUNT(*) AS total_indicacoes
+FROM indicados_ao_oscar
+WHERE categoria LIKE 'ACT%'
+GROUP BY nome_indicado
+HAVING COUNT(*) > 1
+ORDER BY total_indicacoes DESC
+limit 1;
+```
 
 **5.3** Quais atores foram indicados mais de 3 vezes, mas nunca ganharam?
 
+```sql
+SELECT nome_indicado, COUNT(*) AS total_indicacoes
+FROM indicados_ao_oscar
+WHERE categoria LIKE 'ACT%' 
+GROUP BY nome_indicado
+HAVING COUNT(*) > 3 AND sum(vencedor) = 0
+ORDER BY total_indicacoes DESC;
+```
+
 **5.4** Encontre todos os artistas que foram indicados em categorias diferentes (ex: ator e diretor).
+```sql
+SELECT nome_indicado, COUNT(DISTINCT categoria) AS total_categorias
+FROM indicados_ao_oscar
+GROUP BY nome_indicado
+HAVING COUNT(DISTINCT categoria) > 1
+ORDER BY total_categorias DESC;
+```
 
 **5.5** Quantos indicados têm exatamente 1 indicação na história?
 
+```sql
+SELECT COUNT(*) AS total_com_uma_indicacao
+FROM (
+    SELECT nome_indicado
+    FROM indicados_ao_oscar
+    GROUP BY nome_indicado
+    HAVING COUNT(*) = 1
+) AS indicados_unicos;
+```
+
 **5.6** Qual o maior números de indicados em um único ano? Essa é uma pergunta franca.  
+
+```sql
+SELECT ano_cerimonia, COUNT(*) AS total_indicados
+FROM indicados_ao_oscar
+group by ano_cerimonia
+order by total_indicados DESC
+LIMIT 1;
+```
 
 ---
 
@@ -344,24 +395,84 @@ WHERE vencedor = true;
 ### Toy Story
 
 **6.1** A série de filmes Toy Story ganhou Oscars em quais anos?
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme
+FROM indicados_ao_oscar
+WHERE nome_filme LIKE '%Toy Story%' and vencedor = 1
+ORDER BY ano_cerimonia;
+```
 
 **6.2** Quantas indicações a franquia Toy Story recebeu no total?
+```sql
+SELECT count(*) as "Vezes indicado ao Oscar (Toy Story)"
+FROM indicados_ao_oscar
+WHERE nome_filme LIKE '%Toy Story%'
+ORDER BY ano_cerimonia;
+```
 
 **6.3** Em quais categorias os filmes Toy Story foram indicados?
+```sql
+SELECT categoria, nome_filme
+FROM indicados_ao_oscar
+WHERE nome_filme LIKE '%Toy Story%'
+ORDER BY ano_cerimonia;
+```
 
 ### Crash
 
 **6.4** Em qual edição do Oscar o filme "Crash" concorreu?
 
+```sql
+SELECT distinct edicao_cerimonia
+FROM indicados_ao_oscar
+WHERE nome_filme = 'Crash';
+```
+
 **6.5** Quantas indicações o filme "Crash" recebeu?
 
+R: 6 Vezes
+
+```sql
+SELECT count(*) as "Vezes indicado ao Oscar (Crash)"
+FROM indicados_ao_oscar
+WHERE nome_filme LIKE 'Crash'
+ORDER BY ano_cerimonia;
+```
+
 **6.6** "Crash" ganhou o Oscar de Melhor Filme?
+
+R: SIM
+
+``` sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE nome_filme = 'Crash' and categoria = "best picture"
+ORDER BY ano_cerimonia;
+```
 
 ### Central do Brasil
 
 **6.7** O filme "Central do Brasil" aparece no banco de dados?
 
+R: Sim, aparece nos dados
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE nome_filme IN ('Central do Brasil','Central Station')
+ORDER BY ano_cerimonia;
+```
+
 **6.8** Se sim, quantas indicações "Central do Brasil" recebeu?
+
+R: Recebeu 2 indicações
+
+```sql
+SELECT count(*) as "Total de vezes que Central do Brasil foi Indicado"
+FROM indicados_ao_oscar
+WHERE nome_filme IN ('Central do Brasil','Central Station')
+ORDER BY ano_cerimonia;
+```
 
 ---
 
