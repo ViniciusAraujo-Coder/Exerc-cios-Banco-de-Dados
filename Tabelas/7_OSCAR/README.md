@@ -493,14 +493,69 @@ ORDER BY ano_cerimonia;
 ## Nível 8: Análise Temporal
 
 **8.1** Quantas indicações aconteceram por década? Agrupe por década (1920s, 1930s, etc.) e mostre o total.
+```sql
+SELECT CONCAT(FLOOR(ano_cerimonia / 10) * 10, 's') AS decada,
+       COUNT(*) AS total_indicacoes
+FROM indicados_ao_oscar
+GROUP BY decada
+ORDER BY decada;
+```
 
 **8.2** Em qual década houve o maior número de indicações?
 
+R: 1940s
+
+```sql
+SELECT CONCAT(FLOOR(ano_cerimonia / 10) * 10, 's') AS decada,
+       COUNT(*) AS total_indicacoes
+FROM indicados_ao_oscar
+GROUP BY decada
+ORDER BY total_indicacoes DESC
+LIMIT 1;
+```
+
 **8.3** Como o número de categorias evoluiu ao longo dos anos? Mostre quantas categorias únicas existiam a cada década.
+
+```sql
+SELECT CONCAT(FLOOR(ano_cerimonia / 10) * 10, 's') AS decada,
+       COUNT(DISTINCT categoria) AS categorias_diferentes
+FROM indicados_ao_oscar
+GROUP BY decada
+ORDER BY decada;
+```
 
 **8.4** Qual foi o ano com o maior número de indicações registradas?
 
+R: Resposta: 1943, com 186 indicações.
+
+```sql
+SELECT ano_cerimonia, COUNT(*) AS total_indicacoes
+FROM indicados_ao_oscar
+GROUP BY ano_cerimonia
+ORDER BY total_indicacoes DESC
+LIMIT 1;
+```
+
 **8.5** Calcule a taxa de crescimento de indicações comparando a primeira década com a última.
+
+R: Resposta: De 73 (anos 1920) para 678 (anos 2020): crescimento de 828,8%.
+
+```sql
+WITH por_decada AS (
+    SELECT FLOOR(ano_cerimonia / 10) * 10 AS decada,
+           COUNT(*) AS total
+    FROM indicados_ao_oscar
+    GROUP BY decada
+)
+SELECT primeira.decada AS primeira_decada,
+       primeira.total  AS indicacoes_primeira,
+       ultima.decada   AS ultima_decada,
+       ultima.total    AS indicacoes_ultima,
+       ROUND((ultima.total - primeira.total) / primeira.total * 100, 1) AS crescimento_pct
+FROM por_decada AS primeira, por_decada AS ultima
+WHERE primeira.decada = (SELECT MIN(decada) FROM por_decada)
+  AND ultima.decada   = (SELECT MAX(decada) FROM por_decada);
+```
 
 ---
 
@@ -510,19 +565,93 @@ ORDER BY ano_cerimonia;
 
 **9.1** Sidney Poitier foi o primeiro ator negro a ser indicado ao Oscar. Em que ano ele foi indicado? Por qual filme?
 
+R: Em 1959, por The Defiant Ones (Acorrentados). 
+
+```sql
+SELECT ano_cerimonia, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE nome_indicado = 'Sidney Poitier'
+  AND categoria LIKE 'ACT%'
+ORDER BY ano_cerimonia
+LIMIT 1;
+```
+
 **9.2** Sidney Poitier ganhou o Oscar nessa indicação?
+
+R: Não
+
+```sql
+SELECT ano_cerimonia, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE nome_indicado = 'Sidney Poitier'
+  AND categoria LIKE 'ACT%'
+ORDER BY ano_cerimonia;
+```
 
 **9.3** Quantos atores/atrizes negros foram indicados na categoria ACTOR ou ACTRESS antes de 1970?
 
+R: 6 pessoas: Hattie McDaniel, Ethel Waters, Dorothy Dandridge, Sidney Poitier, Juanita Moore e Beah Richards.
+
+```sql
+SELECT ano_cerimonia, categoria, nome_indicado, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE categoria LIKE 'ACT%'
+  AND ano_cerimonia < 1970
+  AND nome_indicado IN ('Hattie McDaniel', 'Ethel Waters', 'Dorothy Dandridge',
+                        'Sidney Poitier', 'Juanita Moore', 'Beah Richards')
+ORDER BY ano_cerimonia;
+SELECT COUNT(DISTINCT nome_indicado) AS total_pessoas
+FROM indicados_ao_oscar
+WHERE categoria LIKE 'ACT%'
+  AND ano_cerimonia < 1970
+  AND nome_indicado IN ('Hattie McDaniel', 'Ethel Waters', 'Dorothy Dandridge',
+                        'Sidney Poitier', 'Juanita Moore', 'Beah Richards');
+```
+
 **9.4** Liste todos os filmes dirigidos por mulheres que ganharam algum Oscar.
+
+```sql
+SELECT ano_cerimonia, nome_indicado AS diretora, nome_filme
+FROM indicados_ao_oscar
+WHERE categoria = 'DIRECTING'
+  AND nome_indicado IN ('Lina Wertmüller', 'Jane Campion', 'Sofia Coppola',
+                        'Kathryn Bigelow', 'Greta Gerwig', 'Chloé Zhao',
+                        'Emerald Fennell', 'Justine Triet')
+  AND nome_filme IN (SELECT nome_filme
+                     FROM indicados_ao_oscar
+                     WHERE vencedor = true)
+ORDER BY ano_cerimonia;
+```
 
 ### Coincidências
 
 **9.5** Denzel Washington e Jamie Foxx já concorreram ao Oscar no mesmo ano?
 
+R: Não
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE nome_indicado IN ('Denzel Washington', 'Jamie Foxx')
+  AND categoria LIKE 'ACT%'
+ORDER BY ano_cerimonia;
+```
+
 **9.6** Se sim, em qual ano e quem ganhou?
 
+R: Não se aplica.
+
 **9.7** Encontre casos onde o mesmo filme ganhou Oscar em múltiplas categorias na mesma cerimônia. Mostre o nome do filme e quantas categorias ele venceu.
+
+```sql
+SELECT nome_filme, ano_cerimonia, COUNT(DISTINCT categoria) AS categorias_vencidas
+FROM indicados_ao_oscar
+WHERE vencedor = true
+  AND nome_filme IS NOT NULL
+GROUP BY nome_filme, ano_cerimonia
+HAVING COUNT(DISTINCT categoria) > 1
+ORDER BY categorias_vencidas DESC, ano_cerimonia;
+```
 
 ---
 
