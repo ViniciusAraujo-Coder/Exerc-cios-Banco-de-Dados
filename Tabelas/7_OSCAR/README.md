@@ -272,14 +272,55 @@ ORDER BY ano_cerimonia;
 
 **4.1** Quem ganhou o primeiro Oscar para Melhor Atriz (ACTRESS)? Em que ano e por qual filme?
 
+R: Janet Gaynor
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE categoria = 'ACTRESS' AND vencedor = true
+ORDER BY ano_cerimonia
+limit 1;
+```
+
 **4.2** Quem ganhou o primeiro Oscar para Melhor Ator (ACTOR)? Em que ano e por qual filme?
+
+R: Emil Jannings
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE categoria = 'ACTOR' AND vencedor = true
+ORDER BY ano_cerimonia
+limit 1;
+```
 
 **4.3** Quantos vencedores existem ao todo na base de dados?
 
+R: 2521
+
+```sql
+SELECT count(*) as "TOTAL VENCEDORES" FROM indicados_ao_oscar
+WHERE vencedor = true;
+```
+
 **4.4** Liste todos os filmes que ganharam o Oscar de Melhor Filme (categoria "OUTSTANDING PICTURE" ou "BEST PICTURE").
+
+```sql
+SELECT ano_cerimonia, nome_indicado, categoria, nome_filme, vencedor
+FROM indicados_ao_oscar
+WHERE categoria = 'OUTSTANDING PICTURE' AND vencedor = true or categoria = 'BEST PICTURE' AND vencedor = true
+ORDER BY ano_cerimonia;
+```
 
 **4.5** Quantos filmes diferentes já ganharam o Oscar?
 
+R: 1356 Filmes
+
+```sql
+SELECT COUNT(DISTINCT nome_filme) AS filmes_vencedores
+FROM indicados_ao_oscar
+WHERE vencedor = true;
+```
 ---
 
 ## Nível 5: Análise de Indicações
