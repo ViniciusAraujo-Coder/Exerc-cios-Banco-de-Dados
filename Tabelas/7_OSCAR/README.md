@@ -659,88 +659,15 @@ ORDER BY categorias_vencidas DESC, ano_cerimonia;
 
 **10.1** Quais filmes ganharam o Oscar de Melhor Filme ("OUTSTANDING PICTURE" ou "BEST PICTURE") e Melhor Diretor na mesma cerimônia?
 
-```sql
-SELECT ano_cerimonia, nome_filme
-FROM indicados_ao_oscar
-WHERE vencedor = true
-  AND categoria IN ('OUTSTANDING PICTURE', 'OUTSTANDING PRODUCTION', 'OUTSTANDING MOTION PICTURE', 'BEST MOTION PICTURE', 'BEST PICTURE')
-  AND (nome_filme, ano_cerimonia) IN (SELECT nome_filme, ano_cerimonia
-                                      FROM indicados_ao_oscar
-                                      WHERE vencedor = true
-                                        AND categoria LIKE 'DIRECTING%')
-ORDER BY ano_cerimonia;
-```
-
 **10.2** Qual filme recebeu o maior número de indicações em uma única cerimônia?
-
-```sql
-SELECT nome_filme, ano_cerimonia, COUNT(*) AS indicacoes
-FROM indicados_ao_oscar
-WHERE nome_filme IS NOT NULL
-GROUP BY nome_filme, ano_cerimonia
-ORDER BY indicacoes DESC
-LIMIT 5;
-```
 
 **10.3** Qual filme teve a maior taxa de conversão (porcentagem de indicações que viraram vitórias)?
 
-```sql
-SELECT nome_filme, ano_cerimonia,
-       COUNT(*)      AS indicacoes,
-       SUM(vencedor) AS vitorias,
-       ROUND(SUM(vencedor) / COUNT(*) * 100, 1) AS taxa_conversao_pct
-FROM indicados_ao_oscar
-WHERE nome_filme IS NOT NULL
-  AND ano_cerimonia <= 2024
-GROUP BY nome_filme, ano_cerimonia
-HAVING COUNT(*) >= 5
-ORDER BY taxa_conversao_pct DESC, vitorias DESC
-LIMIT 5;
-```
-
 **10.4** Encontre atores que foram indicados em anos consecutivos. Liste o nome e os anos.
-
-```sql
-SELECT DISTINCT a.nome_indicado,
-       a.ano_cerimonia AS ano,
-       b.ano_cerimonia AS ano_seguinte
-FROM indicados_ao_oscar AS a
-JOIN indicados_ao_oscar AS b
-  ON  b.nome_indicado = a.nome_indicado
-  AND b.ano_cerimonia = a.ano_cerimonia + 1
-WHERE a.categoria LIKE 'ACT%'
-  AND b.categoria LIKE 'ACT%'
-ORDER BY a.nome_indicado, ano;
-```
 
 **10.5** Qual a média de indicações por cerimônia ao longo da história?
 
-R: 110.2
-
-```sql
-SELECT ROUND(AVG(total), 1) AS media_por_cerimonia
-FROM (
-    SELECT edicao_cerimonia, COUNT(*) AS total
-    FROM indicados_ao_oscar
-    WHERE ano_cerimonia <= 2024
-    GROUP BY edicao_cerimonia
-) AS por_cerimonia;
-```
-
 **10.6** Identifique "surpresas" - indicados em categorias principais (ACTOR, ACTRESS, BEST PICTURE) cujo filme só teve uma indicação.
-
-```sql
-SELECT ano_cerimonia, categoria, nome_indicado, nome_filme
-FROM indicados_ao_oscar
-WHERE ano_cerimonia <= 2024
-  AND categoria IN ('ACTOR', 'ACTRESS', 'ACTOR IN A LEADING ROLE',
-                    'ACTRESS IN A LEADING ROLE', 'BEST PICTURE')
-  AND (nome_filme, ano_cerimonia) IN (SELECT nome_filme, ano_cerimonia
-                                      FROM indicados_ao_oscar
-                                      GROUP BY nome_filme, ano_cerimonia
-                                      HAVING COUNT(*) = 1)
-ORDER BY ano_cerimonia;
-```
 
 ---
 
